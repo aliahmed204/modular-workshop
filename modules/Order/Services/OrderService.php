@@ -2,6 +2,7 @@
 
 namespace Modules\Order\Services;
 
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Modules\Order\Models\Order;
 use Modules\Product\Models\Product;
@@ -17,12 +18,12 @@ class OrderService
             $total = $this->calculateTotal($data['items']);
 
             if ($discount > $total) {
-                throw new \Exception(__('Discount cannot be greater than total amount.'));
+                throw new Exception(__('Discount cannot be greater than total amount.'));
             }
 
             $total -= $discount;
 
-            $order =  Order::query()->create([
+            $order = Order::query()->create([
                 "user_id" => $data['user_id'],
                 "total" => $total,
                 "address" => $data['address'] ?? null,
@@ -39,6 +40,9 @@ class OrderService
     {
         return collect($items)->sum(function ($item) {
             $product = Product::query()->find($item['product_id']);
+            if (is_null($product)) {
+                throw new Exception(__('Product not found: ID ') . $item['product_id']);
+            }
             return $product->price * ($item['quantity'] ?? 1);
         });
     }
