@@ -11,6 +11,7 @@ class CheckoutRequest extends FormRequest
         return [
             "user_id" => "required|integer|exists:users,id",
             "discount" => "nullable|integer|min:0",
+            "address" => "required|string|max:255",
             "items" => "required|array|min:1",
             "items.*.product_id" => "required|integer|exists:products,id",
             "items.*.quantity" => "required|integer|min:1",

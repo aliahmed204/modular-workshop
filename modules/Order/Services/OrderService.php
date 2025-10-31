@@ -22,14 +22,16 @@ class OrderService
 
             $total -= $discount;
 
-            return Order::query()->create([
+            $order =  Order::query()->create([
                 "user_id" => $data['user_id'],
                 "total" => $total,
                 "address" => $data['address'] ?? null,
-                "items" => $data['items'],
                 "discount" => $discount,
             ]);
 
+            $this->createOrderItems($order, $data['items']);
+
+            return $order->refresh();
         });
     }
 
@@ -39,5 +41,17 @@ class OrderService
             $product = Product::query()->find($item['product_id']);
             return $product->price * ($item['quantity'] ?? 1);
         });
+    }
+
+    private function createOrderItems(Order $order, array $items): void
+    {
+        foreach ($items as $item) {
+            $product = Product::query()->find($item['product_id']);
+            $order->orderLines()->create([
+                'product_id' => $product->id,
+                'quantity' => $item['quantity'] ?? 1,
+                'price' => $product->price,
+            ]);
+        }
     }
 }
